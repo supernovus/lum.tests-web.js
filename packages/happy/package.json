@@ -1,0 +1,32 @@
+{
+  "name": "@lumjs/tests-web-happy",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./lib/plugin.js",
+    "./register": "./lib/register.js",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@happy-dom/global-registrator": "21.0.4"
+  },
+  "devDependencies": {
+    "@lumjs/core": "^1.39.3",
+    "@lumjs/html-xml": "^1.0.0",
+    "@lumjs/tests": "^2.2.0",
+    "@lumjs/web-core": "^1.11.0"
+  },
+  "todoDependencies": {
+    "NOTE": "remove devDependencies once tests-web is available",
+    "@lumjs/tests-web": "^1.0.0"
+  },
+  "scripts": {
+    "test": "lumtest.js"
+  },
+  "homepage": "https://github.com/supernovus/lum.tests-web.js/tree/main/packages/happy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/supernovus/lum.tests-web.js.git"
+  },
+  "license": "MIT"
+}

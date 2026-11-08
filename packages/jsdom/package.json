@@ -1,0 +1,36 @@
+{
+  "name": "@lumjs/tests-web-jsdom",
+  "version": "1.0.0",
+  "type": "module",
+  "exports":
+  {
+    ".": "./lib/plugin.js",
+    "./register": "./lib/register.js",
+    "./package.json": "./package.json"
+  },
+  "dependencies": 
+  {
+    "global-jsdom": "^30.0.0"
+  },
+  "devDependencies": {
+    "@lumjs/core": "^1.39.3",
+    "@lumjs/html-xml": "^1.0.0",
+    "@lumjs/tests": "^2.2.0",
+    "@lumjs/web-core": "^1.11.0"
+  },
+  "todoDependencies": {
+    "NOTE": "remove devDependencies once tests-web is available",
+    "@lumjs/tests-web": "^1.0.0"
+  },
+  "scripts":
+  {
+    "test": "lumtest.js"
+  },
+  "homepage": "https://github.com/supernovus/lum.tests-web.js/tree/main/packages/jsdom",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/supernovus/lum.tests-web.js.git"
+  },
+  "license": "MIT"
+}
