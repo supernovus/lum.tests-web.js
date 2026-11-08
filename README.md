@@ -1,4 +1,4 @@
-# lum.web-tests.js (mono-repo)
+# lum.tests-web.js (mono-repo)
 
 This is a mono-repo containing the sources for a collection of packages
 for testing DOM and other Web-related APIs, mostly designed for use with
