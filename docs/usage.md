@@ -19,12 +19,12 @@ let div = document.createElement('div');
 ```
 
 You could also auto-register it and get a copy of the `Globals` singleton 
-from [@lumjs/tests-web], which is both a named export, and the default export
-from any plugin `register` modules. You could then add other extensions, 
-or built-in features, like the Fetch Testing API.
+from [@lumjs/tests-web], which is a named export from `register` modules.
+You could then add other extensions, or built-in features, like the 
+Fetch Testing API, etc.
 
 ```js
-import Globals from "@lumjs/tests-web-happy/register";
+import { Globals } from "@lumjs/tests-web-happy/register";
 
 // Let's use built-in fetch() replacement plugin.
 let fetchPlug = await Globals.fetch(async (ctx) => {
@@ -68,3 +68,15 @@ await Globals.off();
 ```
 
 ---
+
+## Default export from `register` modules
+
+The _default_ export from the register modules is a closure function: 
+`(enable=true) => Globals.use(Plugin, enable)`. 
+
+It's the same function that is run automatically by the register module, 
+but is exported in case you need to re-run it after turning off the globals.
+
+Likely not a common scenario in real use-cases, but the default test-sets
+use it so that the test Harness can load multiple tests that include the
+same register module even after the globals have been unregistered.

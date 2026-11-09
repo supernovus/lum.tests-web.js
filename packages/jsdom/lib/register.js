@@ -1,5 +1,8 @@
 import { Globals, JSdomPlugin } from "./plugin.js";
 export { Globals, JSdomPlugin }
-export default Globals;
 
-Globals.use(JSdomPlugin);
+const usePlugin = (enable=true) => Globals.use(JSdomPlugin, enable);
+
+export default usePlugin;
+
+usePlugin();
