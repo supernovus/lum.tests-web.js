@@ -6,11 +6,22 @@ const { PS } = GlobalsPlugin;
 /**
  * A singleton object that manages the global namespace.
  * 
- * Every method in this is designed to work with plugins that may use async
- * operations, so everything is explicitly async up front.
+ * Most methods in this are async, as they are designed to work with plugins/
+ * that may use async operations. The only exceptions are simple value tests.
  */
 export const Globals = {
   [PS]: new Map(),
+
+  /**
+   * Is a value a GlobalPlugin instance object, or the Globals singleton?
+   * 
+   * This is for when you want to be able to call `val.off()` or `val.on()` 
+   * to toggle global values, regardless if it's one plugin, or all of them.
+   * @param {mixed} val
+   * @returns {boolean}
+   */
+  canToggleGlobals: (val) => ((val === Globals) 
+    || (val instanceof GlobalsPlugin)),
 
   /**
    * Enable the fetch() plugin.
@@ -36,7 +47,16 @@ export const Globals = {
   },
 
   /**
+   * Is a value a GlobalsPlugin class constructor or instance object?
+   * @param {mixed} val
+   * @returns {boolean}
+   */
+  isPlugin: (val) => (GlobalsPlugin.isPrototypeOf(val) 
+    || (val instanceof GlobalsPlugin)),
+
+  /**
    * Turn on all currently registered plugins.
+   * @returns {Promise<this>}
    */
   async on() {
     for (let plugin of this[PS].values()) {
@@ -49,6 +69,7 @@ export const Globals = {
 
   /**
    * Turn off all currently enabled plugins.
+   * @returns {Promise<this>}
    */
   async off() {
     for (let plugin of this[PS].values()) {

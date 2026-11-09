@@ -38,7 +38,7 @@ export class WebTest extends LumTest {
   }
 
   /**
-   * Execute a `@lumjs/web-core.query.find()` query that returns a helper
+   * Execute a `@lumjs/web-core/query.find()` query that returns a helper
    * object that has testing methods that apply to the query results.
    * @param {...mixed} findArgs - Arguments for find().
    * @returns {WebFindTest}
@@ -118,6 +118,7 @@ for (let meth of ISA_TESTS) {
 
 /**
  * A sub-test child returned by {@link WebTest#findTest}.
+ * Extends: `@lumjs/web-core/query.FindResult`.
  * 
  * @prop {WebFindTypeTest} isCollection - {@link WebTest#isCollection}
  * @prop {WebFindTypeTest} isContainer - {@link WebTest#isContainer}
