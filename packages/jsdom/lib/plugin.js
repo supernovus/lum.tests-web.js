@@ -2,6 +2,8 @@ import { Globals, GlobalsPlugin } from '@lumjs/tests-web';
 import globalJsdom from "global-jsdom";
 export { Globals }
 
+const cp = Object.assign;
+
 /**
  * A plugin that uses `jsdom` as a global DOM API.
  */
@@ -15,7 +17,7 @@ export class JSdomPlugin extends GlobalsPlugin {
   }
 
   disable_Plugin(state) {
-    this.$undo;
+    this.$undo();
   }
 
 }

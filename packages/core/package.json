@@ -6,6 +6,7 @@
   {
     ".": "./lib/index.js",
     "./globals": "./lib/globals/index.js",
+    "./testsets": "./lib/testsets/index.js",
     "./package.json": "./package.json"
   },
   "dependencies": 
