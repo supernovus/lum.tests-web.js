@@ -1,8 +1,16 @@
 import Plugin from "./plugin.js";
 
+export const CT = 'Content-Type';
+export const CT_JSON = 'application/json';
+export const CT_TEXT = 'text/plain';
+
 /**
  * A built-in plugin that replaces the global fetch() function with
  * a version that redirects the Request to a custom handler.
+ * 
+ * There are definite limitations to this implementation,
+ * and it's not going to cover 100% of use cases, but it should
+ * be a decent way to test basic fetch() features in tests.
  */
 export class FetchPlugin extends Plugin {
 
@@ -42,7 +50,8 @@ export class FetchPlugin extends Plugin {
       this.handler = defaultHandler;
     }
 
-    let ctx = new FetchContext(request, options);
+    let CtxClass = this.options.contextClass ?? FetchContext;
+    let ctx = new CtxClass(request, options);
     return this.handler(ctx);
   }
 
@@ -71,18 +80,55 @@ export class FetchPlugin extends Plugin {
  * 
  * Simply returns a Response with a status code `500`, and a plain-text
  * message of 'No handler'. Doesn't care about the Request at all.
+ * @private
  */
-function defaultHandler() {
-  return new Response('No handler', { 
-    status: 500,
-    headers: new Headers({ 'Content-Type': 'text/plain' }),
-  });
+function defaultHandler(ctx) {
+  return ctx.textResponse('No handler', 500);
+}
+
+/**
+ * Build a Response object.
+ * 
+ * This is basically just a mild sugar coating over the Response constructor.
+ * 
+ * It's available as a standalone exported function, or as a method of the
+ * {@link FetchContext} object which is passed to fetch() handlers.
+ * 
+ * @param {?(string|Object)} [body] Body for Response.
+ * 
+ * Use `null` (the default), if the Response does not have a body.
+ * 
+ * @param {(Object|number)} [resInit] Request init.
+ * 
+ * If this is a number, it will be used as the `status` code.
+ * 
+ * @param {string} [ctype] Content-Type header value.
+ * @returns {Response}
+ */
+export function respond(body, resInit, ctype) {
+  if (typeof resInit === 'number') {
+    resInit = { status: resInit };
+  }
+  else if (!resInit || typeof resInit !== 'object') {
+    resInit = {};
+  }
+
+  if (!(resInit.headers instanceof Headers)) {
+    resInit.headers = new Headers(resInit.headers);
+  }
+
+  if (typeof ctype === 'string') {
+    resInit.headers.set(CT, ctype);
+  }
+
+  return new Response(body, resInit);
 }
 
 /**
  * An object that will be passed to fetch handlers.
- * It wraps the Request with some useful helpers,
- * and provides a quick way to build Response items.
+ * 
+ * It wraps the Request with some useful helpers, and provides quick ways
+ * to build Response objects to return from the handler.
  */
 export class FetchContext {
   constructor(request, options) {
@@ -95,7 +141,27 @@ export class FetchContext {
   }
 
   /**
+   * A getter that returns the `Content-Type` Request header.
+   * @returns {string}
+   */
+  get contentType() {
+    return this.request.headers.get(CT);
+  }
+
+  /**
+   * A getter that returns the Request headers.
+   * @returns {Headers}
+   */
+  get headers() {
+    return this.request.headers;
+  }
+
+  /**
    * A getter that returns a clone of `this.request`.
+   * 
+   * This is the safest way to do anything involving the body,
+   * as it's a one-use ReadableStream, so by making a clone,
+   * you can access it multiple times without affecting the original.
    * @returns {Request}
    */
   get req() {
@@ -119,24 +185,39 @@ export class FetchContext {
   }
 
   /**
-   * Generate a JSON response.
+   * Generate a JSON Response.
    * 
-   * Will automatically set the Content-Type header,
+   * Uses `this.respond()`. Will automatically set the Content-Type header,
    * and convert an object into a JSON body.
-   * @param {Object} data - Data to turn into JSON body.
-   * @param {Object} [resInit] A Response init object.
+   * 
+   * @param {Object} data - Data to turn into JSON Response body.
+   * @param {(Object|number)} [resInit] Response init, or status code number.
    * @param {Object} [resInit.headers] Either a Headers instance,
    * or a headersInit object to pass to the Headers constructor.
    * @returns {Response}
    */
-  jsonResponse(data, resInit = {}) {
-    if (!(resInit.headers instanceof Headers)) {
-      resInit.headers = new Headers(resInit.headers);
-    }
-    resInit.headers.set('Content-Type', 'application/json');
-    return new Response(JSON.stringify(data), resInit);
+  jsonResponse(data, resInit) {
+    return this.respond(JSON.stringify(data), resInit, CT_JSON);
+  }
+
+  /**
+   * Generate a plain text Response.
+   * 
+   * Uses `this.respond()`. Will automatically set the Content-Type header,
+   * and uses the text argument as the body as-is.
+   * 
+   * @param {Object} text - Text to use as the Response body.
+   * @param {(Object|number)} [resInit] Response init, or status code number.
+   * @param {Object} [resInit.headers] Either a Headers instance,
+   * or a Headers init object to pass to the Headers constructor.
+   * @returns {Response}
+   */
+  textResponse(text, resInit) {
+    return this.respond(text, resInit, CT_TEXT);
   }
 
 }
+
+FetchContext.prototype.respond = respond;
 
 export default FetchPlugin;

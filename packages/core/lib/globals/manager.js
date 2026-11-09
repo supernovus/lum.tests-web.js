@@ -15,10 +15,10 @@ export const Globals = {
   /**
    * Enable the fetch() plugin.
    * @param {function} [handler] Handler to use.
-   * @returns {FetchPlugin}
+   * @returns {Promise<FetchPlugin>}
    */
   async fetch(handler) {
-    let fp = this[PS].get('FetchPlugin');
+    let fp = this[PS].get(FetchPlugin);
     if (fp instanceof FetchPlugin) {
       if (!fp.active) {
         await fp.on();
