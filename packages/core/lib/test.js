@@ -9,25 +9,26 @@ const { df } = core.obj;
 const cp = Object.assign;
 
 const ISA_TESTS = [
-  'isDocument', 'isElement', 'isNode', 'isWindow',
+  'isElement', 'isNode',
 ];
 
 const WCU_TESTS = [
-  'isCollection', 'isContainer', 'isQueryable',
+  'isCollection', 'isContainer', 'isDocument', 'isQueryable',
 ];
 
 const SUB_TESTS = [
   'findTest',
 ];
 
+const stringy = opts => opts.stringify ?? true;
+const nota = opts => opts.not ?? false;
+
 /**
  * An extension of the `Test` class from `@lumjs/tests` which provides
  * some extra testing features wrapping `@lumjs/web-core` functions.
  * 
- * @prop {WebTypeTest} isDocument - Is a value a `Document`?
  * @prop {WebTypeTest} isElement - Is a value an `Element`?
  * @prop {WebTypeTest} isNode - Is a value a `Node`?
- * @prop {WebTypeTest} isWindow - Is a value a `Window`?
  */
 export class WebTest extends LumTest {
   constructor(opts = {}) {
@@ -54,9 +55,10 @@ export class WebTest extends LumTest {
    * @param {string} [desc]
    * @param {Object} [info]
    * @param {mixed} [directive=null]
+   * @returns {boolean}
    */
   $isok(desc, info, directive=null) {
-    let details = info.ok ? info : null;
+    let details = info.ok ? null : info;
     return this.ok(info.ok, desc, directive, details);
   }
 
@@ -65,6 +67,7 @@ export class WebTest extends LumTest {
    * @param {mixed} got
    * @param {string} [desc]
    * @param {Object} [opts]
+   * @returns {boolean}
    */
   isCollection(got, desc, opts = {}) {
     return this.$isok(desc, cp({}, opts, {
@@ -79,6 +82,7 @@ export class WebTest extends LumTest {
    * @param {mixed} got
    * @param {string} [desc]
    * @param {Object} [opts]
+   * @returns {boolean}
    */
   isContainer(got, desc, opts = {}) {
     return this.$isok(desc, cp({}, opts, {
@@ -89,10 +93,27 @@ export class WebTest extends LumTest {
   }
 
   /**
+   * Is a value a `Document` or `HTMLDocument` instance?
+   * @param {mixed} got
+   * @param {string} [desc]
+   * @param {Object} [opts]
+   * @returns {boolean}
+   */
+  isDocument(got, desc, opts = {}) {
+    return this.isa(got, 
+      [globalThis.Document, globalThis.HTMLDocument],
+      desc,
+      stringy(opts),
+      nota(opts)
+    );
+  }
+
+  /**
    * Test using `@lumjs/web-core.utils.isQueryable`.
    * @param {mixed} got
    * @param {string} [desc]
    * @param {Object} [opts]
+   * @returns {boolean}
    */
   isQueryable(got, desc, opts = {}) {
     return this.$isok(desc, cp({}, opts, {
@@ -104,15 +125,12 @@ export class WebTest extends LumTest {
 
 }
 
-const stringy = opts => opts.stringify ?? true;
-const nota = opts => opts.not ?? false;
 const wtp = WebTest.prototype;
 
 for (let meth of ISA_TESTS) {
   let className = meth.substring(2);
-  let classType = globalThis[className];
   df(wtp, meth, function(got, desc, opts = {}) {
-    this.isa(got, classType, desc, stringy(opts), nota(opts));
+    this.isa(got, [globalThis[className]], desc, stringy(opts), nota(opts));
   });
 }
 
@@ -126,7 +144,6 @@ for (let meth of ISA_TESTS) {
  * @prop {WebFindTypeTest} isElement - Is the value an `Element`?
  * @prop {WebFindTypeTest} isNode - Is the value a `Node`?
  * @prop {WebFindTypeTest} isQueryable - {@link WebTest#isQueryable}
- * @prop {WebFindTypeTest} isWindow - Is the value a `Window`?
  */
 export class WebFindTest extends WebCore.query.FindResult {
   /**
