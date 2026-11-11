@@ -8,7 +8,57 @@ most server-side JS runtimes.
 
 ## Exports
 
-TODO
+### Module: `@lumjs/tests-web`
+
+The default module exports everything needed to build tests specifically
+for the HTML DOM and other Web APIs.
+
+|  Export name  |                        Description                         |
+| ------------- | ---------------------------------------------------------- |
+| `WebFindTest` | A child class returned by `WebTest.findTest()` method.     |
+| `WebTest`     | A class extending [@lumjs/tests]`.Test` for Web/DOM tests. |
+| _default_     | Aliased to the `WebTest` class.                            |
+
+This module also exports all _named exports_ from the `globals` sub-module.
+
+### Module: `@lumjs/tests-web/globals`
+
+A sub-module related to managing the global namespace.
+
+|   Export name   |                       Description                        |
+| --------------- | -------------------------------------------------------- |
+| `CT`            | A string: `Content-Type`                                 |
+| `CT_JSON`       | JSON content type string.                                |
+| `CT_TEXT`       | Plain text content type string.                          |
+| `FetchContext`  | An internal class used by `FetchPlugin`.                 |
+| `FetchPlugin`   | A `fetch()` global replacement designed for testing.     |
+| `Globals`       | A singleton object that manages the global JS namespace. |
+| `GlobalsPlugin` | Abstract class for `Globals` plugins.                    |
+| `PluginState`   | An internal class used by `GlobalsPlugin`.               |
+| `respond()`     | A function for quickly building Response objects.        |
+| _default_       | Aliased to the `Globals` singleton object.               |
+
+As every named export from this is also exported by the default module, 
+it's unlikely this module should ever need to be used on its own.
+
+### Module: `@lumjs/tests-web/testsets`
+
+A sub-module containing common tests for packages providing `Globals` plugins.
+
+|   Export name   |                  Description                   |
+| --------------- | ---------------------------------------------- |
+| `getPlan()`     | A function for compiling a planned test count. |
+| `setPlan()`     | A function for assigning a planned test count. |
+| `globalsOff()`  | Basic tests when unregistering globals.        |
+| `globalsOn()`   | Basic tests when using `Globals` plugins.      |
+| `Globals`       | Re-exported from `globals` module.             |
+| `GlobalsPlugin` | Re-exported from `globals` module.             |
+| `WebFindTest`   | Re-exported from _default_ module.             |
+| `WebTest`       | Re-exported from _default_ module.             |
+| `wtBasics`      | Basic tests for the `WebTest` class.           |
+
+There is no reason for anything other than `tests-web-*` packages to use any
+of the functions or test-sets specific to this module.
 
 ## DOM Extensions
 
