@@ -1,6 +1,6 @@
 {
   "name": "@lumjs/tests-web-jsdom",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "exports":
   {
@@ -10,16 +10,7 @@
   },
   "dependencies": 
   {
-    "global-jsdom": "^30.0.0"
-  },
-  "devDependencies": {
-    "@lumjs/core": "^1.39.3",
-    "@lumjs/html-xml": "^1.0.0",
-    "@lumjs/tests": "^2.2.0",
-    "@lumjs/web-core": "^1.11.0"
-  },
-  "todoDependencies": {
-    "NOTE": "remove devDependencies once tests-web is available",
+    "global-jsdom": "^30.0.0",
     "@lumjs/tests-web": "^1.0.0"
   },
   "scripts":
