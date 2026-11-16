@@ -2,6 +2,7 @@ import { nota, stringy } from './internal.js';
 import LumTests from '@lumjs/tests';
 import core from '@lumjs/core';
 
+const CT = 'Content-Type';
 const cp = Object.assign;
 const lock = Object.freeze;
 const LumTest = LumTests.Test;
@@ -153,6 +154,21 @@ export class WebReqResTest {
   }
 
   /**
+   * Test the Content-Type header value.
+   * 
+   * This literally just calls `this.headers()` with a fixed key name,
+   * and the `{cleanHeaders: true}` option set automatically.
+   * 
+   * @param {(string|Regexp)} want - Header test.
+   * @param {string} [label] Test name/label.
+   * @param {Object} [opts] Options.
+   */
+  contentType(want, label, opts) {
+    opts = cp({ cleanHeaders: true }, opts);
+    return this.headers(CT, want, label, opts);
+  }
+
+  /**
    * Can the body be decoded as a FormData object?
    * @param {boolean} want - If it should be able to be decoded.
    * @param {string} [label] Test name/label.
@@ -176,20 +192,36 @@ export class WebReqResTest {
   /**
    * Test for specific headers.
    * @param {string} key - Name of the header to test.
-   * @param {(string|boolean)} want - Header test:
+   * @param {(string|RegExp|boolean)} want - Header test:
    * 
    * - A string will use: `test.is(headers.get(key), want, ...)`;
+   *   see `opts.cleanHeaders` for notes on string tests.
+   * - A RegExp will use: `test.matches(headers.get(key), want, ...)`;
    * - A boolean will use: `test.is(headers.has(key), want, ...)`;
    * 
    * @param {string} [label] Test name/label.
    * @param {Object} [opts] Options.
+   * @param {boolean} [opts.cleanHeaders=false] Clean multipart header values?
+   * 
+   * This option is only used if `want` is a string!
+   * 
+   * If this is true, then anything after a `;` character will be removed
+   * from the header value before testing it against the `want` string.
+   * 
    */
   headers(key, want, label, opts) {
     let info = this.$with(opts);
     let { r, o, t } = info;
 
     if (typeof want === 'string') {
-      t.is(r.headers.get(key), want, label, stringy(o));
+      let value = r.headers.get(key);
+      if (o.cleanHeaders) {
+        value = value.split(/;/)[0];
+      }
+      t.is(value, want, label, stringy(o));
+    }
+    else if (want instanceof RegExp) {
+      t.matches(r.headers.get(key), want, label, stringy(o));
     }
     else {
       t.is(r.headers.has(key), !!want, label, stringy(o));
@@ -325,9 +357,10 @@ export class WebReqResTest {
   /**
    * Test for specific URL search params (`url.searchParams`).
    * @param {string} key - Name of the search param to test.
-   * @param {(string|boolean)} want - Search param test:
+   * @param {(string|Regexp|boolean)} want - Search param test:
    * 
    * - A string will use: `test.is(searchParams.get(key), want, ...)`;
+   * - A RegExp will use: `test.matches(searchParams.get(key), want, ...)`;
    * - A boolean will use: `test.is(searchParams.has(key), want, ...)`;
    * 
    * @param {string} [label] Test name/label.
@@ -341,6 +374,9 @@ export class WebReqResTest {
     if (typeof want === 'string') {
       t.is(u.searchParams.get(key), want, label, stringy(o));
     }
+    else if (want instanceof RegExp) {
+      t.matches(u.searchParams.get(key), want, label, stringy(o));
+    }
     else {
       t.is(u.searchParams.has(key), !!want, label, stringy(o));
     }
@@ -351,9 +387,10 @@ export class WebReqResTest {
   /**
    * Body text tests; exact test depends on arguments passed.
    * 
-   * @param {(string|boolean)} want - What are you expecting?
+   * @param {(string|RegExp|boolean)} want - What are you expecting?
    * 
    * - A string will use: `test.is(got, want, ...)`;
+   * - A RegExp will use: `test.matches(got, want, ...)`;
    * - Boolean true will use: `test.isa(got, 'string', ...)`;
    * - Boolean false will use: `test.isa(got, Error, ...)`;
    * 
@@ -365,6 +402,9 @@ export class WebReqResTest {
 
     if (typeof want === 'string') {
       info.t.is(info.b, want, label, stringy(info.o));
+    }
+    else if (want instanceof RegExp) {
+      info.t.matches(info.b, want, label, stringy(info.o));
     }
     else {
       this.$isaBody(info, want, label, 'string');
@@ -478,6 +518,7 @@ export class WebResponseTest extends WebReqResTest {
  */
 const BODY_TESTS = lock([
   'arrayBuffer', 'blob', 'body', 'bytes', 'formData', 'json', 'text',
+  'contentType', // ← This should have its own category, but meh.
 ]);
 
 /**
