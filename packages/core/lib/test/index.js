@@ -1,6 +1,8 @@
 import LumTests from '@lumjs/tests';
 import WebCore from '@lumjs/web-core';
 import core from '@lumjs/core';
+import { nota, stringy } from './internal.js';
+import { WebRequestTest, WebResponseTest } from './body.js';
 
 const LumTest = LumTests.Test;
 const wcu = WebCore.utils;
@@ -20,8 +22,8 @@ const SUB_TESTS = [
   'findTest',
 ];
 
-const stringy = opts => opts.stringify ?? true;
-const nota = opts => opts.not ?? false;
+export { LumTest }
+export * from './body.js';
 
 /**
  * An extension of the `Test` class from `@lumjs/tests` which provides
@@ -31,6 +33,31 @@ const nota = opts => opts.not ?? false;
  * @prop {WebTypeTest} isNode - Is a value a `Node`?
  */
 export class WebTest extends LumTest {
+
+  /**
+   * A static getter for the class used by the findTest() method.
+   * Must be a sub-class of WebFindClass (the default).
+   */
+  static get findTestClass() {
+    return WebFindTest;
+  }
+
+  /**
+   * A static getter for the class used by the testRequest() method.
+   * Must be a sub-class of WebRequestClass (the default).
+   */
+  static get testRequestClass() {
+    return WebRequestTest;
+  }
+
+  /**
+   * A static getter for the class used by the testResponse() method.
+   * Must be a sub-class of WebResponseClass (the default).
+   */
+  static get testResponseClass() {
+    return WebResponseTest;
+  }
+
   constructor(opts = {}) {
     super(opts);
     this.$testMethods = LumTest.$METHODS.test.concat(
@@ -45,7 +72,8 @@ export class WebTest extends LumTest {
    * @returns {WebFindTest}
    */
   findTest(...findArgs) {
-    let findTest = new WebFindTest(this);
+    let FTC = this.constructor.findTestClass;
+    let findTest = new FTC(this);
     return wcq.find(findTest, ...findArgs);
   }
 
@@ -121,6 +149,28 @@ export class WebTest extends LumTest {
       got,
       comparitor: 'isQueryable',
     }));
+  }
+
+  /**
+   * Build an instance of a class to test a Request object.
+   * @param {Request} req - Request object to be tested.
+   * @param {Object} [opts] Options.
+   * @returns {WebRequestTest}
+   */
+  testRequest(req, opts) {
+    let RTC = this.constructor.testRequestClass;
+    return new RTC(this, req, opts);
+  }
+
+  /**
+   * Build an instance of a class to test a Response object.
+   * @param {Response} res - Response object to be tested.
+   * @param {Object} [opts] Options.
+   * @returns {WebResponseTest}
+   */
+  testResponse(res, opts) {
+    let RTC = this.constructor.testResponseClass;
+    return new RTC(this, res, opts);
   }
 
 }

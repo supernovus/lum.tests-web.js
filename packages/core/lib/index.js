@@ -1,5 +1,5 @@
-export * from './test.js';
+export * from './test/index.js';
 export * from './globals/index.js';
 
-import { WebTest } from './test.js';
+import { WebTest } from './test/index.js';
 export default WebTest;

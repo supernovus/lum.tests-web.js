@@ -1,11 +1,12 @@
 {
   "name": "@lumjs/tests-web",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "exports":
   {
     ".": "./lib/index.js",
     "./globals": "./lib/globals/index.js",
+    "./test": "./lib/test/index.js",
     "./testsets": "./lib/testsets/index.js",
     "./package.json": "./package.json"
   },
@@ -14,7 +15,7 @@
     "@lumjs/core": "^1.39.3",
     "@lumjs/html-xml": "^1.0.0",
     "@lumjs/tests": "^2.2.0",
-    "@lumjs/web-core": "^1.11.0"
+    "@lumjs/web-core": "^1.12.0"
   },
   "scripts":
   {

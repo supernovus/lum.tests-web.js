@@ -1,6 +1,6 @@
-import { WebTest, WebFindTest } from '../test.js';
+import { WebTest } from '../test/index.js';
 import core from '@lumjs/core';
-export { WebTest, WebFindTest }
+export { WebTest }
 
 const { df } = core.obj;
 const { isComplex } = core.types;
