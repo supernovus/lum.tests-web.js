@@ -480,6 +480,35 @@ export class WebResponseTest extends WebReqResTest {
   }
 
   /**
+   * Was the Response redirected?
+   * @param {boolean} [want=true] Should it be ok?
+   * 
+   * This parameter may be omitted entirely, in which case you can just pass
+   * the `label` and `opts` arguments. The first argument is type-checked to
+   * determine if it is the `want` or `label` argument.
+   * 
+   * Default: `true`.
+   * @param {string} [label] Test name/label.
+   * @param {Object} [opts] Options.
+   */
+  redirected(want = true, label, opts) {
+    if (typeof want === 'string') {
+      if (isObj(label)) {
+        opts = label;
+      }
+      label = want;
+      want = true;
+    }
+
+    let info = this.$with(opts);
+    let { r, o, t } = info;
+
+    t.is(r.redirected, !!want, label, stringy(o));
+
+    return info;
+  }
+
+  /**
    * Test the Response status or statusText value.
    * @param {(number|string)} want - What should the status be?
    * 
@@ -541,7 +570,7 @@ const REQ_ONLY_TESTS = lock(['method']);
  * Tests that testResponse() handles; same signature as the BODY tests.
  * @alias RR_TESTS.RES_ONLY
  */
-const RES_ONLY_TESTS = lock(['ok', 'status']);
+const RES_ONLY_TESTS = lock(['ok', 'redirected', 'status']);
 
 /**
  * URL related tests that both testRequest() and testResponse() can handle

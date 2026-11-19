@@ -87,9 +87,32 @@ function defaultHandler(ctx) {
 }
 
 /**
+ * Replace the useless `url` property on manually generated Response objects.
+ * 
+ * The `url` property on manually constructed Response objects is always `""`.
+ * In order to generate more realistic Response objects, this function will
+ * allow you to replace that useless getter with a proper URL value.
+ * 
+ * @param {Response} res - Response instance.
+ * @param {(string|URL)} url - URL to assign to `res.url` property.
+ * 
+ * The `url` property is always expected to be a string, so `url.toString()` 
+ * is called to ensure the assigned value is the correct value type.
+ * If you use a custom URL sub-class, make sure it handles that correctly!
+ * 
+ * @returns {Response} The res argument is returned.
+ */
+export const setResponseUrl = (res, url) => Object.defineProperty(res, 'url', 
+{
+  configurable: true,
+  enumerable: true,
+  value: url.toString(),
+});
+
+/**
  * Build a Response object.
  * 
- * This is basically just a mild sugar coating over the Response constructor.
+ * This is basically just sugar coating over the Response constructor.
  * 
  * It's available as a standalone exported function, or as a method of the
  * {@link FetchContext} object which is passed to fetch() handlers.
@@ -98,16 +121,29 @@ function defaultHandler(ctx) {
  * 
  * Use `null` (the default), if the Response does not have a body.
  * 
- * @param {(Object|number)} [resInit] Request init.
+ * @param {(Object|number)} [resInit] Response init options.
  * 
- * If this is a number, it will be used as the `status` code.
+ * If this is a number, it will be used as `resInit.status`.
+ * If this is an instance of `Headers`, it will be used as `resInit.headers`.
+ * Any other object will be used directly as the Response options.
  * 
- * @param {string} [ctype] Content-Type header value.
+ * @param {(Object|string)} [opts] Options.
+ * 
+ * If this is a `string`, it will be used as `opts.contentType`.
+ * If this is an instance of `URL`, it will be used as `opts.url`.
+ * 
+ * @param {string} [opts.contentType] A `Content-Type` header value to set.
+ * @param {string} [opts.ctype] An shorter alias for `opts.contentType`.
+ * @param {(string|URL)} [opts.url] See {@link setResponseUrl}.
+ * 
  * @returns {Response}
  */
-export function respond(body, resInit, ctype) {
+export function respond(body, resInit, opts = {}) {
   if (typeof resInit === 'number') {
     resInit = { status: resInit };
+  }
+  else if (resInit instanceof Headers) {
+    resInit = { headers: resInit };
   }
   else if (!resInit || typeof resInit !== 'object') {
     resInit = {};
@@ -117,11 +153,28 @@ export function respond(body, resInit, ctype) {
     resInit.headers = new Headers(resInit.headers);
   }
 
+  if (typeof opts === 'string') {
+    opts = { contentType: opts };
+  }
+  else if (opts instanceof URL) {
+    opts = { url: opts };
+  }
+  else if (!opts || typeof opts !== 'object') {
+    opts = {};
+  }
+
+  let ctype = opts.contentType ?? opts.ctype;
   if (typeof ctype === 'string') {
     resInit.headers.set(CT, ctype);
   }
 
-  return new Response(body, resInit);
+  let res = new Response(body, resInit);
+
+  if (opts.url === 'string' || opts.url instanceof URL) {
+    setResponseUrl(res, opts.url);
+  }
+
+  return res;
 }
 
 /**
