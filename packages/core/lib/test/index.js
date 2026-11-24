@@ -1,8 +1,8 @@
 import LumTests from '@lumjs/tests';
 import WebCore from '@lumjs/web-core';
 import core from '@lumjs/core';
-import { nota, stringy } from './internal.js';
 import { WebRequestTest, WebResponseTest } from './body.js';
+import { nota, stringy } from './internal.js';
 
 const LumTest = LumTests.Test;
 const wcu = WebCore.utils;
