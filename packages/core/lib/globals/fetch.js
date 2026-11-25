@@ -1,8 +1,12 @@
+import core from '@lumjs/core';
 import Plugin from "./plugin.js";
 
 export const CT = 'Content-Type';
 export const CT_JSON = 'application/json';
 export const CT_TEXT = 'text/plain';
+
+const { isObj } = core.types;
+const uc = (str) => str.toUpperCase();
 
 /**
  * A built-in plugin that replaces the global fetch() function with
@@ -181,7 +185,9 @@ export function respond(body, resInit, opts = {}) {
  * An object that will be passed to fetch handlers.
  * 
  * It wraps the Request with some useful helpers, and provides quick ways
- * to build Response objects to return from the handler.
+ * to build Response objects to return from the handler, as well as an
+ * optional routing feature that can use the results of tests to determine
+ * the Response that will be returned.
  */
 export class FetchContext {
   constructor(request, options) {
@@ -191,6 +197,9 @@ export class FetchContext {
     else {
       this.request = new Request(request, options);
     }
+
+    this.res = null;
+    this.queue = [];
   }
 
   /**
@@ -207,6 +216,10 @@ export class FetchContext {
    */
   get headers() {
     return this.request.headers;
+  }
+
+  get method() {
+    return this.request.method;
   }
 
   /**
@@ -267,6 +280,131 @@ export class FetchContext {
    */
   textResponse(text, resInit) {
     return this.respond(text, resInit, CT_TEXT);
+  }
+
+  /**
+   * Use a route test.
+   * 
+   * @param {?(function|Object)} test - Test definition.
+   * 
+   * If this is a function, it will be called to determine if the test passes.
+   * It may return a boolean, or an array of arguments to pass to the handler.
+   * 
+   * If this is an object, then one or more of the property tests must be set.
+   * 
+   * @param {(string|string[])} [test.http] HTTP method name(s).
+   * 
+   * The names are case-insensitive (they'll be forced to uppercase).
+   * 
+   * @param {(string|RegExp)} [test.path] Path name test.
+   * 
+   * If this is a string, the URL pathname must match exactly.
+   * 
+   * If this is a RegExp, then we will call `url.pathname.match(test.path)`,
+   * and if that returned a successful array, the items from that array
+   * will be used as extra arguments for the handler.
+   * 
+   * @param {function} handler - Function to call if test passes.
+   * 
+   * The context (`this`) will be set to the FetchRouter instance.
+   * 
+   * The number of arguments depends on the test that was used.
+   * The first argument will always be `this.ctx`, and the last argument
+   * will always be `test`. There are currently two situations where there
+   * would be more arguments between those two:
+   * 
+   * - If `test` was a function and it returned an Array.
+   * - If `test.path` was a `RegExp`, the matches array will be included.
+   * 
+   * @returns {this}
+   */
+  when(test, handler) {
+    if (this.res instanceof Response) return this;
+    if (this.res instanceof Promise) {
+      // Add another test to the queue.
+      this.queue.push([test, handler]);
+      return this;
+    }
+
+    let pargs = null;
+
+    if (typeof test === 'function') {
+      pargs = test.call(this, this);
+      if (!pargs) return this;
+    }
+    else if (isObj(test)) {
+      if (typeof test.http === 'string') {
+        if (this.method !== uc(test.http)) return this;  
+      }
+      else if (Array.isArray(test.http)) {
+        if (test.http.map(uc).includes(this.method)) return this;
+      }
+
+      if (typeof test.path === 'string') {
+        if (this.url.pathname !== test.path) return this;
+      }
+      else if (test.path instanceof RegExp) {
+        pargs = this.url.pathname.match(test.path);
+        if (!pargs) return this; // No matches.
+      }
+    }
+
+    if (typeof handler === 'function') {
+      if (Array.isArray(pargs)) {
+        pargs.unshift(this);
+        pargs.push(test);
+      }
+      else {
+        pargs = [this, test];
+      }
+      this.res = handler.apply(this, pargs);
+    }
+
+    return this;
+  }
+
+  /**
+   * Assign a default route handler for when none of the tests pass.
+   * 
+   * This MUST be done after ALL `when()` calls, just before `route()`.
+   * 
+   * @param {function} handler - Function to call.
+   * @returns {this}
+   */
+  else(handler) {
+    return this.when(null, handler);
+  }
+
+  /**
+   * Get a Response from one of the `when()` tests, or an `else()` handler.
+   * @returns {Promise<Response>}
+   * @throws {RangeError} If none of the when() tests passed and there was
+   * no else() handler. It can also occur if any of the handlers passed to
+   * when() or else() did not return a Response, or a Promise that resolved
+   * to a Response.
+   */
+  async route() {
+    if (this.res instanceof Response) {
+      return this.res;
+    }
+
+    if (this.res instanceof Promise) {
+      return this.res.then((rr) => {
+        this.res = rr;
+        return this.route();
+      }).catch((err) => {
+        this.res = err;
+        return this.route();
+      });
+    }
+
+    if (this.queue.length) {
+      let [test, fun] = this.queue.shift();
+      return this.when(test, fun).route();
+    }
+
+    // If we reached here, we ran out of tests with no Response!
+    throw new RangeError('No Response could be found');
   }
 
 }

@@ -238,7 +238,7 @@ export class WebReqResTest {
     if (typeof want === 'string') {
       let value = r.headers.get(key);
       if (o.cleanHeaders) {
-        value = value.split(/;/)[0];
+        value = value.split(';')[0];
       }
       t.is(value, want, label, stringy(o));
     }
