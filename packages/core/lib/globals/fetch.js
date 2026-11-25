@@ -306,10 +306,10 @@ export class FetchContext {
    * 
    * @param {function} handler - Function to call if test passes.
    * 
-   * The context (`this`) will be set to the FetchRouter instance.
+   * The context (`this`) will be set to the FetchContext instance.
    * 
    * The number of arguments depends on the test that was used.
-   * The first argument will always be `this.ctx`, and the last argument
+   * The first argument will always be `this`, and the last argument
    * will always be `test`. There are currently two situations where there
    * would be more arguments between those two:
    * 
